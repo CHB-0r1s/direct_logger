@@ -1,12 +1,11 @@
 import logging
 import json
 import sys
+import os
 from datetime import datetime
 
 
 class JsonFormatter(logging.Formatter):
-    """Преобразует лог в JSON и добавляет метаданные"""
-
     def format(self, record):
         log_data = {
             "timestamp": datetime.fromtimestamp(record.created).isoformat(),
@@ -30,21 +29,39 @@ class JsonFormatter(logging.Formatter):
 
 
 class CustomAdapter(logging.LoggerAdapter):
-    """Позволяет передавать любые аргументы как метаданные"""
-
     def process(self, msg, kwargs):
         extra = kwargs.pop("extra", {})
         extra.update(kwargs)
         return msg, {"extra": {"custom_extra": extra}}
 
 
-def get_logger(name="AppLogger", level=logging.DEBUG):
+def get_logger(name="AppLogger", level=logging.DEBUG, log_file=None, to_console=True):
+    """
+    :param name: Имя логгера
+    :param level: Уровень логирования
+    :param log_file: Путь к файлу (если нужно писать в файл)
+    :param to_console: Если False, вывод в терминал будет отключен
+    """
     logger = logging.getLogger(name)
 
-    if not logger.handlers:
-        logger.setLevel(level)
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(JsonFormatter())
-        logger.addHandler(handler)
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    logger.setLevel(level)
+    formatter = JsonFormatter()
+
+    if to_console:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+    if log_file:
+        log_dir = os.path.dirname(log_file)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     return CustomAdapter(logger, {})
