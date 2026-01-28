@@ -48,11 +48,14 @@ def get_logger(name="AppLogger", level=logging.DEBUG, log_file=None, to_console=
         logger.handlers.clear()
 
     logger.setLevel(level)
-    formatter = JsonFormatter()
+
+    json_formatter = JsonFormatter()
+
+    console_formatter = logging.Formatter('[%(levelname)s]:  %(message)s')
 
     if to_console:
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(formatter)
+        console_handler.setFormatter(console_formatter)
         logger.addHandler(console_handler)
 
     if log_file:
@@ -61,7 +64,7 @@ def get_logger(name="AppLogger", level=logging.DEBUG, log_file=None, to_console=
             os.makedirs(log_dir)
 
         file_handler = logging.FileHandler(log_file, encoding='utf-8')
-        file_handler.setFormatter(formatter)
+        file_handler.setFormatter(json_formatter)
         logger.addHandler(file_handler)
 
     return CustomAdapter(logger, {})
