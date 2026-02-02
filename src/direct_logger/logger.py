@@ -2,13 +2,15 @@ import logging
 import json
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+MSK = timezone(timedelta(hours=3))
 
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_data = {
-            "timestamp": datetime.fromtimestamp(record.created).isoformat(),
+            "timestamp": datetime.fromtimestamp(record.created, tz=MSK).isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
             "metadata": {
